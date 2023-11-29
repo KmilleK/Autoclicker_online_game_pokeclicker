@@ -1,0 +1,20 @@
+# .gitignore
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyw
+*.pyc
+
+# Virtual environments
+venv/
+.env/
+
+# Build files
+build/
+dist/
+
+# Spyder IDE specific directory
+.spyproject/
