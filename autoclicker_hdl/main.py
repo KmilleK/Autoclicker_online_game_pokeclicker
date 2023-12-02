@@ -14,118 +14,47 @@ To do:
     - Info print to user when autoclicker is on or off (visual)
 """
 
-from pynput.mouse import Button, Controller as MouseController
-from pynput import mouse
-from pynput.keyboard import KeyCode, Controller as KeyboardController, Listener
 
-from PIL import ImageGrab
-from threading import Thread
-from threading import Event
-import time
+from clicker_action.autoclicker import ClickMouse 
+from listener.input_listener import InputListener
+from common.message_bus import MessageBus
+from UI.main_page import Main_Window
 
-################### Initialisation for mouse and keyboard control 
+from PyQt5.QtWidgets import QApplication
+import sys
 
-mouse_c = MouseController()
-
-start_key = KeyCode(char='s')
-pause_key= KeyCode(char='p')
-stop_key= KeyCode(char='x')
-delay =0.05
-button =Button.left
-
-################## class for repetability 
-
-class ClickMouse(Thread): 
-    def __init__(self,delay,button): 
-        super().__init__()
-        self.delay =delay
-        self.button =button
-        self.running=False
-        self.program_running =True
-        print("initialise the clickMouse")
-
-    def start_clicking(self): 
-        self.running=True
-        print("start clickMouse")
-
-    def stop_clicking(self):
-        if (self.running==True):
-            print("stop clickMouse")
-        self.running=False
-        
-
-    def exit(self): 
-        self.stop_clicking()
-        self.program_running =False 
-
-    def run(self):
-        while self.program_running:
-            time.sleep(0.1)
-            while self.running: 
-                mouse_c.click(self.button,1)
-                time.sleep(self.delay)
-                
- 
-################### Thread starting for autoclick
-
-event =Event()    # Shared event to stop our thread when exit button is clicked
-
-click_thread= ClickMouse(delay,button)
-click_thread.start()
-
-################### Listener definition and start 
-
-def on_press(key):
-    if  key== start_key: 
-        if click_thread.running:
-            click_thread.stop_clicking()
-        else:
-            click_thread.start_clicking()
-            
-    elif key==stop_key:
-        event.set()
-        event_move_from_code.clear()
-        #dungeon_thread.exit()
-        click_thread.exit()
-        listener_mouse.stop()
-        listener_keyboard.stop()
-        print("Autoclicker Disable")
-        
-        """
-       if  key== start_dungeon_key: 
-           if dungeon_thread.running: 
-               dungeon_thread.stop_dungeoning()
-           else: 
-               dungeon_thread.start_dungeoning()  
-        """ 
-        
-def on_move(x, y):
-    if not (event_move_from_code.is_set()):
-      #  dungeon_thread.stop_dungeoning()
-        click_thread.stop_clicking()
-        #print("Mouse moved to position: ({}, {})".format(x, y))
-    else:
-        print("mouse move by python code")
+def main():
     
+    message_bus= MessageBus()
+    
+    delay=0.1
+   
+    click_thread = ClickMouse(delay,message_bus)
+    click_thread.start()
+   
+    listener_input= InputListener(message_bus)
+    
+    app=QApplication([])
+    main_window = Main_Window(message_bus)
+    main_window.show()
+    
+    
+    try:
+        sys.exit(app.exec_())
+        #while not message_bus.exit_event.is_set():
+         #   pass
+           
+    except KeyboardInterrupt:
+        pass
+    finally:
+        message_bus.set_exit_event()
+        click_thread.exit()
+        listener_input.listener_keyboard.stop()
+        listener_input.listener_mouse.stop()
+        click_thread.join()
 
-def on_scroll(x, y, dx, dy):
-    if not (event_move_from_code.is_set()):
-        #dungeon_thread.stop_dungeoning()
-        click_thread.stop_clicking()
-        #print("Mouse scrolled at position: ({}, {})".format(x, y))
-        #print("Scroll distance: ({}, {})".format(dx, dy))
-    else: 
-        print("mouse scroll by python code")
-
-event_move_from_code= Event()    # Shared event to not do anything when the movement is from the python controller
-
-listener_mouse = mouse.Listener(
-    on_move=on_move,
-    on_scroll=on_scroll)
-listener_mouse.start()
-
-listener_keyboard=Listener(on_press=on_press) 
-listener_keyboard.start()
+if __name__=="__main__":
+    main()
 
 
 
