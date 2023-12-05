@@ -14,23 +14,27 @@ from PyQt5.QtCore import (Qt)
 from UI.animated_toggle import AnimatedToggle
 from UI.click_sublayout import clickGridLayout
 
+
+from clicker_action.autoclicker import ClickMouse 
+from listener.input_listener import InputListener
+from common.message_bus import MessageBus
+
 import os
+import sys
 
 WINDOW_WIDTH = 500  # Set your desired window size
 WINDOW_HEIGHT= 300
 NEW_HEIGHT=400
 
 class Main_Window(QMainWindow):
-    def __init__(self,message_bus):
-        super().__init__(parent=None)
-        self.setWindowTitle("Autoclicker")
-
-        self.message_bus=message_bus
+    def __init__(self):
+        parent=None
+        super().__init__(parent,Qt.WindowStaysOnTopHint)
+        
+        self.message_bus=MessageBus()
         self.message_bus.subscribe('autoclick_stop', self.exit)
-        
+        self.setWindowTitle("Autoclicker")
         self._createStatusBar()
-        
-        
         self._InitUI()
         
 
@@ -53,10 +57,15 @@ class Main_Window(QMainWindow):
         self.logo = QLabel()
         self.logo.setFixedSize(100, 100)
         self.logo.setAlignment(Qt.AlignRight)
-
-        script_path = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_path, "..", "..", "data", "logo_company.jpeg")
-        print(image_path)
+        
+        if getattr(sys,'frozen',False):
+            script_path=sys._MEIPASS
+            image_path = os.path.join(script_path, "data", "logo_company.jpeg")
+        else: 
+            script_path = os.path.dirname(os.path.abspath(__file__))
+            image_path = os.path.join(script_path, "..", "..", "data", "logo_company.jpeg")
+            
+        #print(image_path)
         pixmap = QPixmap(image_path)
 
         if pixmap.isNull():
@@ -92,20 +101,46 @@ class Main_Window(QMainWindow):
         window.setLayout(layout)
         self.setCentralWidget(window)
         
-        self.toggle_changed(False)
+        #self.toggle_changed(False)
+        self.custom_layout.hide()
 
     
-    def toggle_changed(self,state):
-        
+    def toggle_changed(self,state):     
         if not (state==2):
-            self.custom_layout.hide()
+            self.click_module_disable() 
         else:
-            self.custom_layout.show()
+            self.click_module_enable()
+            
             
     def exit(self, *args, **kwargs): 
-        print('exit toggle')
+        #print('exit toggle')
         #self.toggle_changed(False)
         self.toggleClick.setCheckState(False)
+        
+        
+    def click_module_enable(self):
+        self.custom_layout.show()
+        
+        self.listener_input= InputListener(self.message_bus)
+        
+        delay=0.05
+        self.click_thread = ClickMouse(delay,self.message_bus)
+        self.click_thread.start()
+        #print('start the click module')
+        
+        
+    def click_module_disable(self):
+        self.custom_layout.hide()
+        
+        self.message_bus.set_exit_event()
+        self.click_thread.exit()
+        self.listener_input.listener_keyboard.stop()   # need to check if no problem with multiple run
+        self.listener_input.listener_mouse.stop()
+        self.click_thread.join()
+        ('stop the click module')
+      
+        
+        
             
             
             

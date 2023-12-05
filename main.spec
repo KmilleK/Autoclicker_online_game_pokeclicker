@@ -7,7 +7,8 @@ a = Analysis(
     datas=[('autoclicker_hdl/clicker_action/**', 'clicker_action'),
            ('autoclicker_hdl/common/**', 'common'),
 	('autoclicker_hdl/listener/**', 'listener'),
-	('autoclicker_hdl/UI/**', 'UI')
+	('autoclicker_hdl/UI/**', 'UI'),
+	('data/**','data')
 	],
     hiddenimports=['pynput','sip'],
     hookspath=[],

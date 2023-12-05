@@ -15,9 +15,6 @@ To do:
 """
 
 
-from clicker_action.autoclicker import ClickMouse 
-from listener.input_listener import InputListener
-from common.message_bus import MessageBus
 from UI.main_page import Main_Window
 
 from PyQt5.QtWidgets import QApplication
@@ -25,33 +22,20 @@ import sys
 
 def main():
     
-    message_bus= MessageBus()
-    
-    delay=0.1
-   
-    click_thread = ClickMouse(delay,message_bus)
-    click_thread.start()
-   
-    listener_input= InputListener(message_bus)
     
     app=QApplication([])
-    main_window = Main_Window(message_bus)
+    main_window = Main_Window()
     main_window.show()
     
     
     try:
         sys.exit(app.exec_())
-        #while not message_bus.exit_event.is_set():
-         #   pass
            
     except KeyboardInterrupt:
         pass
-    finally:
-        message_bus.set_exit_event()
-        click_thread.exit()
-        listener_input.listener_keyboard.stop()
-        listener_input.listener_mouse.stop()
-        click_thread.join()
+
+        
+    
 
 if __name__=="__main__":
     main()

@@ -11,13 +11,13 @@ class ClickMouse(Thread):
         self.button= Button.left
         self.mouse_c=MouseController()
         self.running=False
-        self.program_running =False
+        self.program_running =True
         
         self.message_bus=message_bus
         self.message_bus.subscribe('autoclick_start', self.start_clicking)
         self.message_bus.subscribe('autoclick_pause', self.pause_clicking)
         self.message_bus.subscribe('autoclick_stop', self.exit)
-        print("initialise the clickMouse")
+        #print("initialise the clickMouse")
 
     def start_clicking(self, *args, **kwargs): 
         self.running=True
